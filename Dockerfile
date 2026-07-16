@@ -1,4 +1,4 @@
-FROM maven:3.9-eclipse-temurin-21 AS Build
+FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
 COPY pom.xml .
 RUN mvn dependency:go-offline -q
@@ -9,7 +9,7 @@ RUN mvn clean package -DskipTests -q
 FROM eclipse-temurin:17-jre-alpine
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 WORKDIR /app
-COPY --from=Build /app/target/payments-api-*.jar app.jar
+COPY --from=build /app/target/payments-api-*.jar app.jar
 USER appuser
 EXPOSE 8080
 ENTRYPOINT [ "java", \
