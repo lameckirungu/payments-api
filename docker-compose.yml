@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   jenkins:
     image: jenkins/jenkins:lts-jdk21
@@ -10,15 +9,15 @@ services:
       - "50000:50000"
     volumes:
       - jenkins-data:/var/jenkins_home
-      - var/run/docker.sock:/var/run/docker.sock
-      - $(which docker):/usr/bin/docker
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /usr/local/bin/docker:/usr/bin/docker
 
     restart: unless-stopped
     group_add:
-      - $(stat -c '%g' /var/run/docker.sock)
+      - "125"
 
 volumes:
   jenkins-data:
-  
+
 networks:
   jenkins-network:
