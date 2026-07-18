@@ -24,6 +24,35 @@ pipeline {
                 sh 'mvn clean package -DskipTests'
               }
           }
-        
+        stage('Test')  {
+            steps {
+                sh 'mvn test'
+              }
+            post {
+                // always runs whether tests pass or fail
+                // publishes reports in any case
+                always {
+                    junit(
+                      testResults: 'target/surefire-reports/**/*.xml',
+                      allowEmptyResults: false
+                    )
+                  }
+              }
+          }
       }
   }
+  // post-pipeline actions
+  post {
+      success {
+          echo "Pipeline succeeded - ${APP_NAME} built and tested"
+        }
+      failure {
+          echo "Pipeline failed - check the logs above"
+        }
+      always {
+          // clean the workspace after every run
+          cleanWs() 
+        }
+    }
+  }
+
