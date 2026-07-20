@@ -9,19 +9,28 @@ pipeline {
 
     environment {
         APP_NAME = 'payments-api'
+        IMAGE_TAG = "${GIT_COMMIT[0..7]}"
+        IMAGE_NAME = "localhost:5000/${APP_NAME}"
       }
 
     stages {
         stage('Checkout') {
             steps {
                 checkout scm
-                echo "Building commit: ${GIT_COMMIT"
+                echo "Building commit: ${GIT_COMMIT}"
+                echo "Image will be tagged: ${IMAGE_TAG}"
               }
           }
         stage('Build') {
             steps {
                 // -DskipTests because we run tests in a dedicated stage
                 sh 'mvn clean package -DskipTests'
+              }
+              post {
+                success {
+                  // Archiving the JAR so as to download it from Jenkins UI
+                  archiveArtifacts: 'target/*.jar', fingerprint: true
+                }
               }
           }
         stage('Test')  {
@@ -34,11 +43,31 @@ pipeline {
                 always {
                     junit(
                       testResults: 'target/surefire-reports/**/*.xml',
-                      allowEmptyResults: false
                     )
                   }
               }
           }
+        stage('Docker Build') {
+          steps {
+            script {
+              echo "Building Docker image: ${IMAGE_NAME}:${IMAGE_TAG}"
+
+              sh """
+                docker build \
+                -t ${IMAGE_NAME}:${IMAGE_TAG} \
+                -t ${IMAGE_NAME}:latest \
+              """
+            }
+          }
+        }
+        stage('Docker Push') {
+          steps {
+            sh """
+              docker push ${IMAGE_NAME}:${IMAGE_TAG}
+              docker push ${IMAGE_NAME}:latest
+            """
+          }
+        }
       }
   }
   // post-pipeline actions
