@@ -67,13 +67,17 @@ pipeline {
               docker push ${IMAGE_NAME}:latest
             """
           }
+        post {
+          always {
+            sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG} || true"
+          }
         }
       }
   }
   // post-pipeline actions
   post {
       success {
-          echo "Pipeline succeeded - ${APP_NAME} built and tested"
+          echo "Image - ${IMAGE_NAME}:${IMAGE-TAG} built and pushed successfully"
         }
       failure {
           echo "Pipeline failed - check the logs above"
